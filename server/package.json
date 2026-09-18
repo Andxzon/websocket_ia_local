@@ -4,7 +4,7 @@
   "description": "LocalAI Bridge — Central server that bridges OpenAI-compatible API to local llama-server via WebSocket",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"const fs=require('fs'),path=require('path');const src=path.resolve(__dirname,'../admin');const dst=path.resolve(__dirname,'dist/admin');if(fs.existsSync(src)){fs.mkdirSync(dst,{recursive:true});fs.readdirSync(src).forEach(f=>fs.copyFileSync(path.join(src,f),path.join(dst,f)));console.log('Admin panel copied to dist/admin/')}\" ",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts"
   },

@@ -5,41 +5,35 @@ import fs from 'fs';
 const router = Router();
 
 /**
- * GET /admin
+ * GET /panel
  * Serves the admin panel HTML.
+ * Tries multiple paths to work both locally and on Render.
  */
 router.get('/', (req: Request, res: Response) => {
-  // Serve inline HTML or static file
-  const htmlPath = path.resolve(__dirname, '../../admin/index.html');
+  // Priority 1: dist/admin/index.html (copied during build, right next to compiled JS)
+  const distAdminPath = path.resolve(__dirname, '../admin/index.html');
 
-  // Try serving from admin/ directory first
-  if (fs.existsSync(htmlPath)) {
-    res.sendFile(htmlPath);
-    return;
+  // Priority 2: source admin/ at repo root (for local ts-node dev)
+  const srcAdminPath = path.resolve(__dirname, '../../../../admin/index.html');
+
+  // Priority 3: relative to cwd
+  const cwdPath = path.resolve(process.cwd(), 'dist/admin/index.html');
+
+  const candidates = [distAdminPath, srcAdminPath, cwdPath];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      res.sendFile(candidate);
+      return;
+    }
   }
 
-  // Fallback: check relative to project root
-  const fallbackPath = path.resolve(__dirname, '../../../admin/index.html');
-  if (fs.existsSync(fallbackPath)) {
-    res.sendFile(fallbackPath);
-    return;
-  }
-
-  // Fallback 2: relative to process.cwd() when running in server/
-  const cwdFallback = path.resolve(process.cwd(), '../admin/index.html');
-  if (fs.existsSync(cwdFallback)) {
-    res.sendFile(cwdFallback);
-    return;
-  }
-
-  // Fallback 3: if running from root
-  const cwdRootFallback = path.resolve(process.cwd(), 'admin/index.html');
-  if (fs.existsSync(cwdRootFallback)) {
-    res.sendFile(cwdRootFallback);
-    return;
-  }
-
-  res.status(404).json({ error: { message: 'Admin panel not found.', checkedPaths: [htmlPath, fallbackPath, cwdFallback, cwdRootFallback] } });
+  res.status(404).json({
+    error: {
+      message: 'Admin panel not found.',
+      checkedPaths: candidates,
+    },
+  });
 });
 
 export default router;
