@@ -1,0 +1,13 @@
+{
+  "name": "localai-bridge-client",
+  "version": "1.0.0",
+  "description": "LocalAI Bridge — Termux client that connects your local llama-server to the cloud",
+  "main": "src/client.js",
+  "scripts": {
+    "start": "node src/client.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ws": "^8.18.0"
+  }
+}
