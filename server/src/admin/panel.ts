@@ -25,7 +25,21 @@ router.get('/', (req: Request, res: Response) => {
     return;
   }
 
-  res.status(404).json({ error: { message: 'Admin panel not found.' } });
+  // Fallback 2: relative to process.cwd() when running in server/
+  const cwdFallback = path.resolve(process.cwd(), '../admin/index.html');
+  if (fs.existsSync(cwdFallback)) {
+    res.sendFile(cwdFallback);
+    return;
+  }
+
+  // Fallback 3: if running from root
+  const cwdRootFallback = path.resolve(process.cwd(), 'admin/index.html');
+  if (fs.existsSync(cwdRootFallback)) {
+    res.sendFile(cwdRootFallback);
+    return;
+  }
+
+  res.status(404).json({ error: { message: 'Admin panel not found.', checkedPaths: [htmlPath, fallbackPath, cwdFallback, cwdRootFallback] } });
 });
 
 export default router;
