@@ -20,6 +20,7 @@
 
 const dotenv = require('dotenv');
 const path = require('path');
+const VoiceSession = require('./voice/VoiceSession');
 
 // Load .env from client directory
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -273,12 +274,23 @@ function connect() {
     });
   });
 
-  ws.on('message', async (data) => {
+  ws.on('message', async (data, isBinary) => {
+    if (isBinary) {
+      // Route binary audio to VoiceSession
+      VoiceSession.getInstance(ws, CONFIG.llamaServerUrl).handleBinary(data);
+      return;
+    }
+
     let message;
     try {
       message = JSON.parse(data.toString());
     } catch {
       logError('Invalid JSON received from server.');
+      return;
+    }
+
+    if (message.type && message.type.startsWith('voice.')) {
+      VoiceSession.getInstance(ws, CONFIG.llamaServerUrl).handleCommand(message);
       return;
     }
 

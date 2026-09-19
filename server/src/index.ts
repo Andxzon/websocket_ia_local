@@ -5,7 +5,7 @@ import { parse as parseUrl } from 'url';
 
 import { config } from './config';
 import { runMigrations } from './database';
-import { createWebSocketHandler } from './websocket';
+import { createWebSocketHandler, createVoiceWebSocketHandler } from './websocket';
 import { chatRouter, modelsRouter, adminRouter, healthRouter } from './api';
 import { securityMiddleware, requestLogger } from './middleware';
 import adminPanelRouter from './admin/panel';
@@ -73,6 +73,10 @@ async function main(): Promise<void> {
   const wss = new WebSocketServer({ noServer: true });
   createWebSocketHandler(wss);
 
+  // Create WebSocket server on /client-voice path
+  const voiceWss = new WebSocketServer({ noServer: true });
+  createVoiceWebSocketHandler(voiceWss);
+
   // Handle WebSocket upgrade
   server.on('upgrade', (request, socket, head) => {
     const url = parseUrl(request.url || '', true);
@@ -80,6 +84,10 @@ async function main(): Promise<void> {
     if (url.pathname === '/device') {
       wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
+      });
+    } else if (url.pathname === '/client-voice') {
+      voiceWss.handleUpgrade(request, socket, head, (ws) => {
+        voiceWss.emit('connection', ws, request);
       });
     } else {
       socket.destroy();
